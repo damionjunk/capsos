@@ -1,4 +1,4 @@
-(ns cali-swarm-synth.audio
+(ns capsos.audio
   (:use [overtone.live]))
 
 

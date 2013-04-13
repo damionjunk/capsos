@@ -1,6 +1,6 @@
-(ns cali-swarm-synth.quil
-  (:require [cali-swarm-synth.state :as state]
-            [cali-swarm-synth.pso   :as pso])
+(ns capsos.quil
+  (:require [capsos.state :as state]
+            [capsos.pso   :as pso])
   (:use [quil.core]
         [clojure.set]))
 
@@ -94,6 +94,32 @@
 
 
 ;;
+;; Method to search though the seq of points, choosing the one that
+;; fits the search criteria.
+(defn pso-find-target
+  "
+   points: a seq of unscaled CA points.
+   searchmode: :closest, :farthest, :random, also with found as a prefix
+               to designate only jump when found.
+  "
+  [searchmode swarm points]
+  ;; For now, lets just implement random
+  (let [xy (rand-nth (seq points))
+        x  (* @px-scaling (first xy))
+        y  (* @px-scaling (second xy))]
+    {:x x :y y}))
+
+(defn pso-find-hits
+  "Find the cells of the CA that points in the PSO are touching."
+  [swarm points]
+  (->> (:particles swarm)
+       (map (fn [{x :x y :y}]
+              [(int (find-cell-pos x))
+               (int (find-cell-pos y))]))
+       (into #{})
+       (intersection points)))
+
+;;
 ;; ## Events
 ;;
 
@@ -101,10 +127,10 @@
 (defn mouse-clicked
   []
   (let [button (mouse-button)
-        x (mouse-x)
-        y (mouse-y)
-        ca-x (find-cell-pos x) 
-        ca-y (find-cell-pos y)]
+        x      (mouse-x)
+        y      (mouse-y)
+        ca-x   (find-cell-pos x) 
+        ca-y   (find-cell-pos y)]
     (println x y ca-x ca-y button)
     ;; Handle in-world stuff
     (if (in-world? ca-x ca-y)
@@ -135,7 +161,7 @@
 
 (defn run-sketch
   "Start the sketch, reset the atoms to the params listed"
-  [{:keys [x y scalingpx cadelay psodelay particles]}]
+  [{:keys [x y scalingpx cadelay psodelay particles retarget-delay]}]
   ;; Reset the state
   (reset! state/pso-state (pso/make-swarm :particles particles
                                           :max-x (* x scalingpx)
@@ -145,6 +171,7 @@
   (reset! state/world-size [x y])
   (reset! state/ca-speed cadelay)
   (reset! state/pso-speed psodelay)
+  (reset! state/pso-target-speed retarget-delay)
   (reset! px-scaling scalingpx)
   (def ^:dynamic pause-position  [(* x scalingpx) 10 25])
   (def ^:dynamic toroid-position [(+ 30 (* x scalingpx)) 10 25])

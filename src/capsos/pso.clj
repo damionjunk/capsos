@@ -1,4 +1,4 @@
-(ns cali-swarm-synth.pso)
+(ns capsos.pso)
 
 ;; Velocity is x speed and y speed
 
@@ -87,7 +87,8 @@
     (assoc p :x (+ x dx) :y (+ y dy))))
 
 ;;
-;; This isn't really part of the PSO algo
+;; This isn't really part of the PSO algo, but we need it to keep the
+;; targets active.
 ;;
 (defn particle-scatter
   "If particles are too close to eachother, add some scatter
@@ -115,9 +116,8 @@
         y (:y p)]
     (or (neg? x) (neg? y) (> x b-x) (> y b-y))))
 
-
-
 (defn step
+  "Updates the swarm by one 'step'. Returns an updated swarm."
   [swarm]
   (let [gbest (:gbest swarm)
        ;; update the x and y
@@ -130,7 +130,11 @@
     ))
 
 (defn re-target
-  "When the target moves, the gBest and pBest data is no longer valid."
+  "When the target moves, the gBest and pBest data is no longer valid.
+
+   new-target: A map containing :x and :y values.
+               example: {:x 100 :y 250}
+   "
   [swarm new-target]
   ;; Reset pbest, gbest, change target
   (let [parts (map (fn [part]
@@ -147,7 +151,19 @@
   (step sw)
 
   (def sw (make-swarm :target {:x 250 :y 250} :particles 5 :max-x 500 :max-y 500))
+  
   (clojure.pprint/pprint sw)
   (last (take 7 (iterate step sw)))
+
+
+  (def ^:dynamic *c1* 0.66)
+  ;; global info weighting
+  (def ^:dynamic *c2* 1.72)
+  ;; constant used for nearness scramble
+  (def ^:dynamic *nd* 5)
+  ;; constant used for velocity scramble modifier
+  (def ^:dynamic *vs* 0.35)
+
+
 
   )

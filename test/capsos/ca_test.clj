@@ -1,6 +1,6 @@
-(ns cali-swarm-synth.ca-test
+(ns capsos.ca-test
   (:use midje.sweet
-        cali-swarm-synth.ca))
+        capsos.ca))
 
 ;;
 ;; ## Neighbor Tests in a 4x4 world-size

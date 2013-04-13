@@ -1,4 +1,4 @@
-(ns cali-swarm-synth.ca)
+(ns capsos.ca)
 
 ;;
 ;; ## CA Lifeforms

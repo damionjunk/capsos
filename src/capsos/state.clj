@@ -1,29 +1,21 @@
-(ns cali-swarm-synth.state
-  (:require [cali-swarm-synth.ca    :as ca]
-            [cali-swarm-synth.pso   :as pso]
-            [cali-swarm-synth.audio :as audio]
-            [overtone.live          :as ot]
+(ns capsos.state
+  (:require [capsos.ca     :as ca]
+            [capsos.pso    :as pso]
+            [capsos.audio  :as audio]
+            [overtone.live :as ot]
             ))
-
-;; TODO: Add an atom for world-state metadata map
-;;       can control 'heat-map' like coloration,
-;;       note longivity, in drone zone
-;;       (can make up concept of drone zone, if we want a gated
-;;       continuous synth runing with params sent from that zoe)
 
 (defonce world-state (atom #{}))
 (defonce pso-state (atom {}))
 (defonce paused?   (atom false))
 (defonce ca-speed (atom 500))
 (defonce pso-speed (atom 100))
+(defonce pso-target-speed (atom 500))
 (defonce world-size (atom [4 4]))
 (defonce running? (atom true))
 (defonce toroidal? (atom false))
 
 (def synthatom (atom nil))
-
-
-
 
 (defn synth-event
   [state]
@@ -55,7 +47,30 @@
   []
   (while @running?
     (if (not @paused?)
-      (do
-        (swap! pso-state pso/step)
-        ))
+      (do (swap! pso-state pso/step)))
     (Thread/sleep @pso-speed)))
+
+
+(defn timed-pso-targeter
+  "Requires a function that takes as first paramter a swarm, and as a second
+   parameter a seq of CA grid positions. (not xy pixel coordinates).
+
+   The function should return an XY-Grid position map"
+  [target-fn]
+  (while @running?
+    (if (not @paused?)
+      (let [target (target-fn @pso-state @world-state)]
+        (println "Targeting:" target)
+        (swap! pso-state pso/re-target target)))
+    (Thread/sleep @pso-target-speed)))
+
+
+(defn timed-pso-intersector
+  ""
+  [quil-target-fn]
+  (while @running?
+    (if (not @paused?)
+      (let [hits (quil-target-fn @pso-state @world-state)]
+        (println hits)
+        ))
+    (Thread/sleep 50)))

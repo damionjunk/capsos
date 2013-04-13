@@ -1,6 +1,6 @@
-(ns cali-swarm-synth.pso-test
+(ns capsos.pso-test
   (:use midje.sweet
-        cali-swarm-synth.pso))
+        capsos.pso))
 
 
 ;; (defn update-particle-xy
