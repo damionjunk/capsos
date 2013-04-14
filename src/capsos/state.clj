@@ -6,7 +6,6 @@
   (:use [leipzig.scale]))
 
 (defonce world-state (atom #{}))
-(defonce pso-state (atom {}))
 (defonce paused?   (atom false))
 (defonce ca-speed (atom 500))
 (defonce pso-speed (atom 100))
@@ -15,27 +14,40 @@
 (defonce running? (atom true))
 (defonce toroidal? (atom false))
 
+;; Contains key->PSO data structs
+(defonce pso-state (atom {}))
+
+
 ;; Define some scale constraints for the PSOs
 (def tonalkeys (atom {1 {:scale (comp F sharp major low low)
-                         :range 15}
+                         :range 15
+                         :durations [1 2 4 4 8]}
                       2 {:scale (comp F sharp major high)
-                         :range 15}
+                         :range 15
+                         :durations [1 2 4 4 8]
+                         }
                       }))
 
 (def synthatom (atom nil))
-
 
 ;;
 ;; Right now this is using just a sum of the x,y to determine
 ;; pitch.
 (defn synth-event
-  [state]
-  (let [xsum    (reduce #(+ %1 (first %2)) 0 state)
-        ysum    (reduce #(+ %1 (second %2)) 0 state)
-        tone    (mod (+ xsum ysum) 15)
-        scalefn (get-in @tonalkeys [1 :scale])
+  [ca-state pso-k pso-st]
+  (let [xsum    (reduce #(+ %1 (first %2)) 0 ca-state)
+        ysum    (reduce #(+ %1 (second %2)) 0 ca-state)
+
+        scalefn (get-in @tonalkeys [pso-k :scale])
+        tonalr  (get-in @tonalkeys [pso-k :range])
+        tonald  (get-in @tonalkeys [pso-k :durations])
+        
+        tone    (mod (+ xsum ysum) tonalr)
         tone    (scalefn tone)
-        dur     (* (count state) 0.75)]
+
+        durp    (dec (min (count ca-state) (count tonald)))
+        durm    (if (pos? durp) (nth tonald durp) 1)
+        dur     (* durm 0.250)]
     (when (and (pos? xsum) (pos? ysum))
       (audio/tonal tone 0.5 dur))))
 
@@ -63,13 +75,16 @@
         ))
     (Thread/sleep @ca-speed)))
 
-
 (defn timed-pso-state-update
   ""
   []
   (while @running?
     (if (not @paused?)
-      (do (swap! pso-state pso/step)))
+      (let [ks (keys @pso-state)]
+        (doseq [k ks]
+          (swap! pso-state
+                 (fn [pso-s]
+                   (assoc pso-s k (pso/step (get pso-s k))))))))
     (Thread/sleep @pso-speed)))
 
 
@@ -81,9 +96,12 @@
   [target-fn]
   (while @running?
     (if (not @paused?)
-      (let [target (target-fn @pso-state @world-state)]
-        (println (format "Targeting (%s): %s" (:searchmode @pso-state) target))
-        (swap! pso-state pso/re-target target)))
+      (doseq [[k pso-s] @pso-state]
+        (let [target (target-fn pso-s @world-state)]
+          (println (format "PSO (%d) Targeting (%s): %s" k (:searchmode pso-s) target))
+          (swap! pso-state
+                 (fn [pso-s]
+                   (assoc pso-s k (pso/re-target (get pso-s k) target)))))))
     (Thread/sleep @pso-target-speed)))
 
 (defn timed-pso-intersector
@@ -93,8 +111,8 @@
   
   (while @running?
     (if (not @paused?)
-      (let [hits (quil-target-fn @pso-state @world-state)]
-        (println "Hits:" hits)
-        (synth-event hits)
-        ))
+      (doseq [k (keys @pso-state)]
+        (let [hits (quil-target-fn (get @pso-state k) @world-state)]
+          (println (format "PSO (%s) Hits: %s" k (count hits)))
+          (synth-event hits k (get @pso-state k)))))
     (Thread/sleep 250)))

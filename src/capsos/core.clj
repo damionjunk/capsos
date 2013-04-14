@@ -17,10 +17,15 @@
   (future (state/timed-pso-state-update))
   (future (state/timed-ca-state-update)))
 
+;;
+;; ## REPL launch from here:
+;;
+;;    go, to start up quil / overtone
+;;        add some CA elements by resetting 'world-state'
 
 (comment
 
-  (go {:x 45 :y 30 :scalingpx 20 :cadelay 200 :psodelay 100 :particles 5
+  (go {:x 45 :y 30 :scalingpx 20 :cadelay 200 :psodelay 100 :particles 6
        :retarget-delay 2000})
 
   (gfx/stop)
@@ -29,7 +34,7 @@
   (reset! state/world-state #{})
 
 
-  (swap! state/pso-state assoc :searchmode :stationary)
+  ;;(swap! state/pso-state assoc :searchmode :stationary)
 
   )
 
@@ -42,13 +47,6 @@
 
   (swap! state/world-state union (ca/ca-blinker 4 4) (ca/ca-blinker 8 8))
 
-  (reset! state/pso-state (pso/make-swarm
-                           :target {:x 300 :y 200}
-                           :particles 15 :max-x 500 :max-y 500))
-  
-  (dotimes [x 50]
-    (swap!  state/pso-state pso/step))
-
 
   (swap! state/world-state union (ca/ca-blinker 4 4) (ca/ca-blinker 8 8))
 
@@ -58,8 +56,6 @@
 
   (go {:x 45 :y 30 :scalingpx 20 :cadelay 200 :psodelay 100 :particles 5})
   (gfx/stop)
-
-  (swap! state/pso-state pso/re-target {:x (rand-int 500) :y (rand-int 500)})
 
   (reset! state/paused? true)
   (reset! state/paused? false)

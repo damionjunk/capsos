@@ -57,12 +57,13 @@
 (defn draw-pso-state
   ""
   [pso-state]
-  (let [particles (:particles pso-state)
-        target    (:target pso-state)]
-    (fill 100 255 255)
-    (doseq [{x :x y :y} particles]
-      (ellipse x y 8 8))
-    (ellipse (:x target) (:y target) 10 10)))
+  (doseq [[k pso-s] pso-state]
+    (let [particles (:particles pso-s)
+          target    (:target pso-s)]
+      (fill 100 255 255)
+      (doseq [{x :x y :y} particles]
+        (ellipse x y 8 8))
+      (ellipse (:x target) (:y target) 10 10))))
 
 (defn draw
   "Calls the Quil draw functions. @world-state is updated in another thread,
@@ -193,10 +194,10 @@
   "Start the sketch, reset the atoms to the params listed"
   [{:keys [x y scalingpx cadelay psodelay particles retarget-delay]}]
   ;; Reset the state
-  (reset! state/pso-state (pso/make-swarm :particles particles
-                                          :max-x (* x scalingpx)
-                                          :max-y (* y scalingpx)
-                                          :target {:x 250 :y 250}))
+  (reset! state/pso-state {1 (pso/make-swarm :particles particles
+                                             :max-x (* x scalingpx)
+                                             :max-y (* y scalingpx)
+                                             :target {:x 250 :y 250})})
   (reset! state/running? true)
   (reset! state/world-size [x y])
   (reset! state/ca-speed cadelay)
