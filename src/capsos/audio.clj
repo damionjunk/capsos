@@ -30,14 +30,21 @@
                             :pos (* 0.75 lfo-pan) ; Reduce Panning
                             )))))
 
-(definst tonal
-  [note 60 amp 0.3 dur 0.6]
-  (let [snd (sin-osc (midicps note))
-        snd (+ (* 0.9 snd)
-               ;(* 0.3 (sin-osc (midicps (- note 12))))
-               )
-        env (env-gen (perc 0.01 dur) :action FREE)]
-    (* env snd amp)))
+(definst tonal-sine
+  [note 60 amp 0.3 dur 0.6 filter 7]
+  (let [filter-f (lin-lin:kr filter 0 127 100 5000)
+        snd (sin-osc (midicps note))
+        env (env-gen (perc 0.01 dur) :action FREE)
+        ]
+    (* env (lpf:ar snd filter-f) amp)))
+
+(definst tonal-square
+  [note 60 amp 0.3 dur 0.6 filter 80]
+  (let [filter-f (lin-lin:kr filter 0 127 100 5000)
+        snd (square (midicps note))
+        env (env-gen (perc 0.01 dur) :action FREE)
+        ]
+    (* env (lpf:ar snd filter-f) amp)))
 
 (defn all-stop
   []
@@ -49,6 +56,12 @@
   (apply (partial ctl s) args))
 
 (comment
+
+  (tonal-square 30 0.8 1.0 50)
+  (tonal-sine 60 0.8 1.0 50)
+  (tonal-sine 72 0.8 1.0 50)
+
+  (stop)
 
   ;;
   ;; Play some drums on the given interval:

@@ -197,7 +197,12 @@
   (reset! state/pso-state {1 (pso/make-swarm :particles particles
                                              :max-x (* x scalingpx)
                                              :max-y (* y scalingpx)
-                                             :target {:x 250 :y 250})})
+                                             :target {:x 250 :y 250})
+                           2 (pso/make-swarm :particles particles
+                                             :max-x (* x scalingpx)
+                                             :max-y (* y scalingpx)
+                                             :target {:x 250 :y 250}
+                                             :searchmode :random)})
   (reset! state/running? true)
   (reset! state/world-size [x y])
   (reset! state/ca-speed cadelay)

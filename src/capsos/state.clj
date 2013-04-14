@@ -3,7 +3,8 @@
             [capsos.pso    :as pso]
             [capsos.audio  :as audio]
             [overtone.live :as ot])
-  (:use [leipzig.scale]))
+  (:use [leipzig.scale]
+        [leipzig.chord]))
 
 (defonce world-state (atom #{}))
 (defonce paused?   (atom false))
@@ -17,39 +18,69 @@
 ;; Contains key->PSO data structs
 (defonce pso-state (atom {}))
 
+(defn chord-arp
+  "Given a key, mode, and chord map from Leipzig,
+   N-octaves of the chord are returned as a MIDI note sequence.
+
+   Example:
+
+   (chord-arp (comp C major) seventh 2)
+
+   ;; => (60 64 67 71 72 76 79 83)
+   "
+  [key-fn chord-map octaves]
+  (let [s (map key-fn (range 12))
+        v (map #(nth s %) (map second chord-map))]
+    (sort (flatten (take octaves
+                         (iterate (fn [ms] (map (partial + 12) ms)) v))))))
+
+(defn mod-nth-chord
+  [carp v]
+  (nth carp (mod v (count carp))))
+
 
 ;; Define some scale constraints for the PSOs
-(def tonalkeys (atom {1 {:scale (comp F sharp major low low)
-                         :range 15
-                         :durations [1 2 4 4 8]}
+(def tonalkeys (atom {1 {:scale (partial mod-nth-chord
+                                         (chord-arp (comp F sharp major low low low) seventh 2)) 
+                         :range 10 
+                         :synth audio/tonal-square
+                         :durations [2 2 4 4]}
                       2 {:scale (comp F sharp major high)
                          :range 15
-                         :durations [1 2 4 4 8]
+                         :synth audio/tonal-sine
+                         :durations [3 4 1 2 2 2 4 4 8]
                          }
                       }))
 
 (def synthatom (atom nil))
+
 
 ;;
 ;; Right now this is using just a sum of the x,y to determine
 ;; pitch.
 (defn synth-event
   [ca-state pso-k pso-st]
-  (let [xsum    (reduce #(+ %1 (first %2)) 0 ca-state)
-        ysum    (reduce #(+ %1 (second %2)) 0 ca-state)
+  (when (pos? (count ca-state)) 
+    (let [xmax    (apply max (map first ca-state))
+          xmin    (apply min (map first ca-state))
+          ymax    (apply max (map second ca-state))
+          ymin    (apply min (map second ca-state))
+          xbar    (/ (+ xmax xmin) 2) 
+          ybar    (/ (+ ymax ymin) 2)
 
-        scalefn (get-in @tonalkeys [pso-k :scale])
-        tonalr  (get-in @tonalkeys [pso-k :range])
-        tonald  (get-in @tonalkeys [pso-k :durations])
-        
-        tone    (mod (+ xsum ysum) tonalr)
-        tone    (scalefn tone)
+          scalefn (get-in @tonalkeys [pso-k :scale])
+          tonalr  (get-in @tonalkeys [pso-k :range])
+          tonald  (get-in @tonalkeys [pso-k :durations])
+          
+          tone    (mod xbar tonalr)
+          tone    (scalefn tone)
 
-        durp    (dec (min (count ca-state) (count tonald)))
-        durm    (if (pos? durp) (nth tonald durp) 1)
-        dur     (* durm 0.250)]
-    (when (and (pos? xsum) (pos? ysum))
-      (audio/tonal tone 0.5 dur))))
+          fltr    (mod (* 2 ybar) 150)
+
+          durp    (dec (min (count ca-state) (count tonald)))
+          durm    (if (pos? durp) (nth tonald durp) 1)
+          dur     (* durm 0.250)]
+      ((get-in @tonalkeys [pso-k :synth]) tone 0.5 dur 20))))
 
 (defn synth-event-free
   [state]
@@ -88,6 +119,8 @@
     (Thread/sleep @pso-speed)))
 
 
+;;
+;; This should *eventually* be moved to a per-swarm basis as well
 (defn timed-pso-targeter
   "Requires a function that takes as first paramter a swarm, and as a second
    parameter a seq of CA grid positions. (not xy pixel coordinates).
@@ -114,5 +147,8 @@
       (doseq [k (keys @pso-state)]
         (let [hits (quil-target-fn (get @pso-state k) @world-state)]
           (println (format "PSO (%s) Hits: %s" k (count hits)))
-          (synth-event hits k (get @pso-state k)))))
+          (try
+            (synth-event hits k (get @pso-state k))
+            (catch Exception e
+              (.printStackTrace e))))))
     (Thread/sleep 250)))

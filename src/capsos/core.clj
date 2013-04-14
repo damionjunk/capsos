@@ -52,7 +52,7 @@
 
   (reset! state/world-state (ca/ca-glider-gun 0 10))
 
-  (reset! state/ca-speed 200)
+  (reset! state/ca-speed 400)
 
   (go {:x 45 :y 30 :scalingpx 20 :cadelay 200 :psodelay 100 :particles 5})
   (gfx/stop)
