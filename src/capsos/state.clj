@@ -17,7 +17,10 @@
 
 ;; Contains key->PSO data structs
 (defonce pso-state (atom {}))
+(def synthatom (atom nil))
 
+;;
+;; Needs refactored. ... This function doesn't belong here.
 (defn chord-arp
   "Given a key, mode, and chord map from Leipzig,
    N-octaves of the chord are returned as a MIDI note sequence.
@@ -40,24 +43,23 @@
 
 
 ;; Define some scale constraints for the PSOs
-(def tonalkeys (atom {1 {:scale (partial mod-nth-chord
-                                         (chord-arp (comp F sharp major low low low) seventh 2)) 
-                         :range 10 
-                         :synth audio/tonal-square
-                         :durations [2 2 4 4]}
-                      2 {:scale (comp F sharp major high)
-                         :range 15
-                         :synth audio/tonal-sine
-                         :durations [3 4 1 2 2 2 4 4 8]
-                         }
+(def tonalkeys (atom {:bass {:scale (partial mod-nth-chord
+                                             (chord-arp (comp G sharp aeolian low low low) seventh 2)) 
+                             :range 8 
+                             :synth audio/tonal-square
+                             :durations [2 0 2 0 4 4]}
+                      :melody {:scale (comp G sharp mixolydian high)
+                               :range 15
+                               :synth audio/tonal-sine
+                               :durations [3 4 1 2 2 2 4 4 8]
+                               } 
+                      :high {:scale (comp G sharp mixolydian)
+                             :range 4 
+                             :synth audio/tonal-sine
+                             :durations [8 12 16]
+                             }
                       }))
 
-(def synthatom (atom nil))
-
-
-;;
-;; Right now this is using just a sum of the x,y to determine
-;; pitch.
 (defn synth-event
   [ca-state pso-k pso-st]
   (when (pos? (count ca-state)) 
@@ -80,7 +82,7 @@
           durp    (dec (min (count ca-state) (count tonald)))
           durm    (if (pos? durp) (nth tonald durp) 1)
           dur     (* durm 0.250)]
-      ((get-in @tonalkeys [pso-k :synth]) tone 0.5 dur 20))))
+      ((get-in @tonalkeys [pso-k :synth]) tone 0.5 dur fltr))))
 
 (defn synth-event-free
   [state]
@@ -131,7 +133,7 @@
     (if (not @paused?)
       (doseq [[k pso-s] @pso-state]
         (let [target (target-fn pso-s @world-state)]
-          (println (format "PSO (%d) Targeting (%s): %s" k (:searchmode pso-s) target))
+          (println (format "PSO (%s) Targeting (%s): %s" k (:searchmode pso-s) target))
           (swap! pso-state
                  (fn [pso-s]
                    (assoc pso-s k (pso/re-target (get pso-s k) target)))))))

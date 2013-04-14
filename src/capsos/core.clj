@@ -17,6 +17,7 @@
   (future (state/timed-pso-state-update))
   (future (state/timed-ca-state-update)))
 
+
 ;;
 ;; ## REPL launch from here:
 ;;
@@ -25,14 +26,39 @@
 
 (comment
 
-  (go {:x 45 :y 30 :scalingpx 20 :cadelay 200 :psodelay 100 :particles 6
+  (go {:x 45 :y 30 :scalingpx 20 :cadelay 200 :psodelay 100 
        :retarget-delay 2000})
 
   (gfx/stop)
 
-  (reset! state/world-state (ca/ca-glider-gun 0 10))
-  (reset! state/world-state #{})
+  (reset! state/world-state (ca/ca-glider-gun 0 1))
 
+  (reset! state/world-state (ca/ca-glider-gun 0 10))
+  (reset! state/world-state (ca/ca-glider-gun 0 17))
+
+  (reset! state/world-state #{})
+  (reset! state/pso-state {})
+
+  (swap! state/world-state union (ca/ca-glider-gun 0 5)
+         (ca/ca-glider-gun 0 10)
+         (ca/ca-glider-gun 0 15)
+         (ca/ca-glider-gun 0 25))
+
+
+  (gfx/add-swarm! :melody 12
+             :random
+             {:x 200 :y 200}
+             {:c1 0.66, :c2 1.72, :nd 10, :vs 0.05} )
+
+  (gfx/remove-swarm! :melody )
+
+  (gfx/update-swarm! :bass :weights {:c1 0.06, :c2 2.72, :nd 10, :vs 0.05} )
+  (gfx/update-swarm! :melody :weights {:c1 0.06, :c2 2.72, :nd 10, :vs 0.75} )
+
+  (gfx/update-swarm! :bass :searchmode :closest)
+  (gfx/update-swarm! :melody :searchmode :closest)
+
+ 
 
   ;;(swap! state/pso-state assoc :searchmode :stationary)
 

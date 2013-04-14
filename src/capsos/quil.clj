@@ -11,6 +11,35 @@
 
 
 ;;
+;; ## Some controls for swarm creation
+;;    probably doesn't belong in this namespace
+
+(defn add-swarm!
+  ""
+  [sid particles searchmode target weights]
+  (let [wx (first @state/world-size)
+        wy (second @state/world-size)]
+    (swap! state/pso-state assoc sid 
+           (pso/make-swarm :particles particles
+                           :searchmode searchmode
+                           :max-x (* wx @px-scaling)
+                           :max-y (* wy @px-scaling)
+                           :weights weights 
+                           :target target))))
+
+(defn remove-swarm!
+  ""
+  [k]
+  (swap! state/pso-state dissoc k))
+
+(defn update-swarm!
+  ""
+  [swarmid k uval]
+  (let [sw (get @state/pso-state swarmid)]
+    (swap! state/pso-state assoc swarmid (assoc sw k uval))))
+
+
+;;
 ;; ## Some GUI Controls
 ;; 
 
@@ -192,17 +221,9 @@
 
 (defn run-sketch
   "Start the sketch, reset the atoms to the params listed"
-  [{:keys [x y scalingpx cadelay psodelay particles retarget-delay]}]
+  [{:keys [x y scalingpx cadelay psodelay retarget-delay]}]
   ;; Reset the state
-  (reset! state/pso-state {1 (pso/make-swarm :particles particles
-                                             :max-x (* x scalingpx)
-                                             :max-y (* y scalingpx)
-                                             :target {:x 250 :y 250})
-                           2 (pso/make-swarm :particles particles
-                                             :max-x (* x scalingpx)
-                                             :max-y (* y scalingpx)
-                                             :target {:x 250 :y 250}
-                                             :searchmode :random)})
+
   (reset! state/running? true)
   (reset! state/world-size [x y])
   (reset! state/ca-speed cadelay)

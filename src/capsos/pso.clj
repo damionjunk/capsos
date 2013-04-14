@@ -117,16 +117,16 @@
     nparticles))
 
 (defn make-swarm
-  [& {:keys [particles max-x max-y target searchmode]}]
+  [& {:keys [particles max-x max-y target searchmode weights]}]
   (let [parts  (take particles (repeatedly #(make-particle max-x max-y)))
         smap   {:particles  parts
                 :target     target
                 :fitness-fn distance-squared
                 :searchmode (or searchmode :closest)
-                :weights    {:c1 *c1*
-                             :c2 *c2*
-                             :nd *nd*
-                             :vs *vs*}}]
+                :weights    (or weights {:c1 *c1*
+                                         :c2 *c2*
+                                         :nd *nd*
+                                         :vs *vs*})}]
     (update-gbest-pbest smap)))
 
 (defn off-board?

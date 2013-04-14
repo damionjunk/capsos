@@ -59,14 +59,14 @@
 
   (tonal-square 30 0.8 1.0 50)
   (tonal-sine 60 0.8 1.0 50)
-  (tonal-sine 72 0.8 1.0 50)
+  (tonal-sine 72 0.8 1.0 10)
 
   (stop)
 
   ;;
   ;; Play some drums on the given interval:
 
-  (dotimes [x 5]
+  (dotimes [x 1]
     (let [slp 250
           nmp {:k [1 0 0 0  1 0 0 0  1 0 0 0  1 0 0 0]
                :s [0 0 0 0  0 0 0 0  0 0 0 0  0 0 0 0]
