@@ -21,7 +21,7 @@
 (comment
 
   (go {:x 45 :y 30 :scalingpx 20 :cadelay 200 :psodelay 100 :particles 5
-       :retarget-delay 2000})
+       :retarget-delay 200})
 
   (gfx/stop)
 

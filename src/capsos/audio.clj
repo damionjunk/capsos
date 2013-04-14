@@ -1,4 +1,5 @@
 (ns capsos.audio
+  (:require [leipzig.scale :as l])
   (:use [overtone.live]))
 
 
@@ -41,7 +42,7 @@
   (let [snd (sin-osc (midicps note))
         snd (+ (* 0.9 snd)
                (* 0.3 (sin-osc (midicps (- note 12)))))
-        env (env-gen (perc 0.01 dur) :action FREE)]
+        env (env-gen (perc 0.1 dur) :action FREE)]
     (* env snd amp)))
 
 (definst kick
@@ -65,8 +66,8 @@
 
 (comment
 
-(kick 0.8 1.0)
-
+  (kick 0.8 1.0)
+  
   ;;
   ;; Play some drums on the given interval:
   (let [dur 0.20]
@@ -103,6 +104,7 @@
   (ctl foo :gate 1)
 
   (ctl foo :freq 150)
+
   
   (ctl foo2 :freq 600)
 
@@ -110,7 +112,14 @@
 
   (ctl foo :pan-rate 0.10)
 
+
+
   (stop)
 
+  (l/major 1)
+
+  ((comp l/C l/sharp l/major l/low l/low) )
+
+  
 
   )

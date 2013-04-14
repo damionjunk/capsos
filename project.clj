@@ -6,4 +6,5 @@
   :dependencies [[org.clojure/clojure "1.4.0"]
                  [quil                "1.6.0"]
                  [overtone            "0.8.1"]
+                 [leipzig             "0.3.0"]
                  [midje               "1.5-alpha10"]])

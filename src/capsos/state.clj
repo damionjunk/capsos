@@ -2,8 +2,8 @@
   (:require [capsos.ca     :as ca]
             [capsos.pso    :as pso]
             [capsos.audio  :as audio]
-            [overtone.live :as ot]
-            ))
+            [overtone.live :as ot])
+  (:use [leipzig.scale]))
 
 (defonce world-state (atom #{}))
 (defonce pso-state (atom {}))
@@ -17,15 +17,29 @@
 
 (def synthatom (atom nil))
 
+
+(def ^:dynamic tonalkey (comp C sharp major low low))
+
 (defn synth-event
   [state]
   (let [xsum (reduce #(+ %1 (first %2)) 0 state)
-        ysum (reduce #(+ %1 (second %2)) 0 state)]
-    ;;(println "Freq:" xsum ysum)
-    ;;(audio/synth-ctl @synthatom :amp 0.5 :freq (ot/midicps 60) :filter (rand-int ysum))
-    ;;(audio/tonal xsum 0.4 (* 0.05 (/ xsum 2)))
-    (if (and (pos? xsum) (pos? ysum))
-      (audio/tonal (audio/notebox ysum 20 90) 0.7))
+        ysum (reduce #(+ %1 (second %2)) 0 state)
+        tone (mod (+ xsum ysum) 20)
+        tone (tonalkey tone)
+        dur  (* (count state) 0.75 (rand))]
+    (when (and (pos? xsum) (pos? ysum))
+      (audio/tonal tone 0.7 dur))))
+
+(defn synth-event-free
+  [state]
+  (let [xsum (reduce #(+ %1 (first %2)) 0 state)
+        ysum (reduce #(+ %1 (second %2)) 0 state)
+        {ofrq :freq} (ot/node-get-control @synthatom [:freq])
+        pfrq (* xsum ysum)
+        pfrq (if (zero? pfrq) ofrq pfrq)
+        pflt (* 10 (max 1 (count state)))]
+    (println "Freq:" xsum ysum pfrq)
+    (audio/synth-ctl @synthatom :amp 1.0 :freq pfrq :filter 30)
     ))
 
 (defn timed-ca-state-update
@@ -37,7 +51,6 @@
     (if (not @paused?)
       (do
         (swap! world-state #(ca/step % :flat (not @toroidal?) :worldsize @world-size))
-        (synth-event @world-state)
         ))
     (Thread/sleep @ca-speed)))
 
@@ -68,9 +81,24 @@
 (defn timed-pso-intersector
   ""
   [quil-target-fn]
+  ;;(reset! synthatom (audio/tdt-synth-env :freq 300 :filter 30 :amp 1.0 :pan-rate 0.24 :gate 1.0))
+  
   (while @running?
     (if (not @paused?)
       (let [hits (quil-target-fn @pso-state @world-state)]
-        (println hits)
+        (println "Hits:" hits)
+        (synth-event hits)
         ))
     (Thread/sleep 50)))
+
+
+(comment
+
+  (ot/stop)
+
+  (reset! pso-target-speed 2000)
+
+  (def ^:dynamic tonalkey (comp F sharp blues low low))
+
+
+  )
