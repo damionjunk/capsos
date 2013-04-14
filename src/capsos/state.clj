@@ -24,11 +24,11 @@
   [state]
   (let [xsum (reduce #(+ %1 (first %2)) 0 state)
         ysum (reduce #(+ %1 (second %2)) 0 state)
-        tone (mod (+ xsum ysum) 20)
+        tone (mod (+ xsum ysum) 15)
         tone (tonalkey tone)
-        dur  (* (count state) 0.75 (rand))]
+        dur  (* (count state) 0.35)]
     (when (and (pos? xsum) (pos? ysum))
-      (audio/tonal tone 0.7 dur))))
+      (audio/tonal tone 0.5 dur))))
 
 (defn synth-event-free
   [state]
@@ -89,16 +89,16 @@
         (println "Hits:" hits)
         (synth-event hits)
         ))
-    (Thread/sleep 50)))
+    (Thread/sleep 250)))
 
 
 (comment
 
   (ot/stop)
 
-  (reset! pso-target-speed 2000)
+  (reset! pso-target-speed 200)
 
-  (def ^:dynamic tonalkey (comp F sharp blues low low))
+  (def ^:dynamic tonalkey (comp F sharp mixolydian low low))
 
 
   )

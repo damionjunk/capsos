@@ -160,7 +160,7 @@
   ;; global info weighting
   (def ^:dynamic *c2* 1.72)
   ;; constant used for nearness scramble
-  (def ^:dynamic *nd* 5)
+  (def ^:dynamic *nd* 1)
   ;; constant used for velocity scramble modifier
   (def ^:dynamic *vs* 0.35)
 

@@ -1,14 +1,7 @@
 (ns capsos.audio
   (:require [leipzig.scale :as l])
-  (:use [overtone.live]))
-
-
-(def notes (atom {}))
-
-
-(defn notebox
-  [note min max]
-  (nth (cycle (range min max)) note))
+  (:use [overtone.live]
+        [overtone.inst.drum]))
 
 (defsynth tdt-synth-env [freq 440.0
                          amp 0.8
@@ -41,17 +34,10 @@
   [note 60 amp 0.3 dur 0.6]
   (let [snd (sin-osc (midicps note))
         snd (+ (* 0.9 snd)
-               (* 0.3 (sin-osc (midicps (- note 12)))))
-        env (env-gen (perc 0.1 dur) :action FREE)]
-    (* env snd amp)))
-
-(definst kick
-  [amp 0.8 dur 0.5]
-  (let [signal (+ (* 0.8 (sin-osc 75)) 
-                  (* 0.8 (square 50)))
+               ;(* 0.3 (sin-osc (midicps (- note 12))))
+               )
         env (env-gen (perc 0.01 dur) :action FREE)]
-    (* env signal amp)))
-
+    (* env snd amp)))
 
 (defn all-stop
   []
@@ -62,64 +48,36 @@
   [s & args]
   (apply (partial ctl s) args))
 
-
-
 (comment
 
-  (kick 0.8 1.0)
-  
   ;;
   ;; Play some drums on the given interval:
-  (let [dur 0.20]
-    (doseq [ks [1 0 0 0 1 0 0 0 1 0 1 0 0 0 1]]
-      (if (zero? ks) (Thread/sleep (* 1000 dur))
+
+  (dotimes [x 1]
+    (let [slp 250
+          nmp {:k [1 0 0 0  1 0 0 0  1 0 0 0  1 0 0 0]
+               :s [0 0 0 0  0 0 0 0  0 0 0 0  0 0 0 0]
+               :h [1 0 1 0  1 0 0 0  1 0 1 0  1 0 0 0]
+               :o [0 0 0 0  0 0 1 0  0 0 0 0  0 0 1 0]}]
+      (doseq [ctr (range (count (:k nmp)))]
+        (let [k (nth (:k nmp) ctr)
+              s (nth (:s nmp) ctr)
+              h (nth (:h nmp) ctr)
+              o (nth (:o nmp) ctr)]
           (do
-            (tonal 60)
-            (kick :dur dur)))))
-
-
-  (take 20
-        (repeatedly 
-         #(do
-            (kick :dur (rand))
-            (tonal 50 :amp 0.8)
-            (Thread/sleep 500)
-            )))
-
-
-
-  (let [a (tdt-synth-env :freq 100 :filter 30 :amp 0.8 :pan-rate 0.24 :gate 1.0)]
-    (ctl a :freq 50)
-    (Thread/sleep 100)
-    (ctl a :freq 100)
-    (Thread/sleep 100)
-    (ctl a :freq 200)
-    (Thread/sleep 100)
-    (ctl a :freq 300)
-    )
-
-  (def foo (tdt-synth-env :freq 70 :filter 20 :amp 0.8 :pan-rate 0.24 :gate 0.5))
-  (def foo2 (tdt-synth-env :freq 90 :filter 20 :amp 0.8 :pan-rate 0.24 :gate 0.5))
-
-  (ctl foo :gate 1)
-
-  (ctl foo :freq 150)
-
-  
-  (ctl foo2 :freq 600)
-
-  (ctl foo2 :filter 100)
-
-  (ctl foo :pan-rate 0.10)
-
+            (if (pos? k) (kick       :amp 0.8))
+            (if (pos? s) (snare      :amp 0.5))
+            (if (pos? h) (closed-hat :amp 0.1))
+            (if (pos? o) (open-hat   :amp 0.1))
+            (Thread/sleep slp))))))
 
 
   (stop)
 
-  (l/major 1)
+  (closed-hat :amp 0.1)
 
-  ((comp l/C l/sharp l/major l/low l/low) )
+  (snare :amp 1.0)
+  (kick2 :amp 1.0)
 
-  
 
   )

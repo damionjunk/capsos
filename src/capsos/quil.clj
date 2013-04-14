@@ -96,6 +96,22 @@
 ;;
 ;; Method to search though the seq of points, choosing the one that
 ;; fits the search criteria.
+
+(defn tgt-min
+  [targets curr]
+  (apply min-key (partial pso/distance-squared curr) targets))
+
+(defn tgt-max
+  [targets curr]
+  (apply max-key (partial pso/distance-squared curr) targets))
+
+(defn to-xy-maps
+  [caps]
+  (map (fn [[x y]] {:x x :y y}) caps))
+
+(defn to-xy-tuple [xy-map] [(:x xy-map) (:y xy-map)])
+
+
 (defn pso-find-target
   "
    points: a seq of unscaled CA points.
@@ -104,7 +120,14 @@
   "
   [searchmode swarm points]
   ;; For now, lets just implement random
-  (let [xy (rand-nth (seq points))
+  (let [ctpx (:target swarm)
+        ct {:x (find-cell-pos (:x ctpx))
+            :y (find-cell-pos (:y ctpx))}
+        xy (cond
+            (= :random searchmode) (rand-nth (seq points))
+            (= :closest searchmode) (to-xy-tuple (tgt-min (to-xy-maps points) ct))
+            (= :farthest searchmode) (to-xy-tuple (tgt-max (to-xy-maps points) ct))
+            )
         x  (* @px-scaling (first xy))
         y  (* @px-scaling (second xy))]
     {:x x :y y}))

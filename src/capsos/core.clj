@@ -12,7 +12,7 @@
    the keys defined in run-sketch if at all possible."
   [opts]
   (gfx/run-sketch opts)
-  (future (state/timed-pso-targeter    (partial gfx/pso-find-target :random)))
+  (future (state/timed-pso-targeter    (partial gfx/pso-find-target :closest)))
   (future (state/timed-pso-intersector gfx/pso-find-hits))
   (future (state/timed-pso-state-update))
   (future (state/timed-ca-state-update)))
@@ -20,8 +20,8 @@
 
 (comment
 
-  (go {:x 45 :y 30 :scalingpx 20 :cadelay 200 :psodelay 100 :particles 5
-       :retarget-delay 200})
+  (go {:x 45 :y 30 :scalingpx 20 :cadelay 200 :psodelay 100 :particles 10 
+       :retarget-delay 2000})
 
   (gfx/stop)
 
