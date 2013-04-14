@@ -53,7 +53,7 @@
   ;;
   ;; Play some drums on the given interval:
 
-  (dotimes [x 1]
+  (dotimes [x 5]
     (let [slp 250
           nmp {:k [1 0 0 0  1 0 0 0  1 0 0 0  1 0 0 0]
                :s [0 0 0 0  0 0 0 0  0 0 0 0  0 0 0 0]
@@ -65,7 +65,27 @@
               h (nth (:h nmp) ctr)
               o (nth (:o nmp) ctr)]
           (do
-            (if (pos? k) (kick       :amp 0.8))
+            (if (pos? k) (kick       :amp 0.7))
+            (if (pos? s) (snare      :amp 0.5))
+            (if (pos? h) (closed-hat :amp 0.1))
+            (if (pos? o) (open-hat   :amp 0.1))
+            (Thread/sleep slp))))))
+
+
+    (dotimes [x 4]
+    (let [slp 250
+          nmp {:k [1 1 0 0  1 0 0 0  1 0 0 1  1 0 0 0]
+               :s [0 0 0 0  0 0 0 0  0 0 0 0  0 0 0 0]
+               :h [1 0 1 1  1 0 1 1  1 0 1 0  1 0 0 0]
+               :o [0 0 0 0  0 0 1 0  0 0 0 0  0 0 1 0]}]
+      (doseq [ctr (range (count (:k nmp)))]
+        (println (format "DrumSeq %d" (inc x)))
+        (let [k (nth (:k nmp) ctr)
+              s (nth (:s nmp) ctr)
+              h (nth (:h nmp) ctr)
+              o (nth (:o nmp) ctr)]
+          (do
+            (if (pos? k) (kick       :amp 0.7))
             (if (pos? s) (snare      :amp 0.5))
             (if (pos? h) (closed-hat :amp 0.1))
             (if (pos? o) (open-hat   :amp 0.1))

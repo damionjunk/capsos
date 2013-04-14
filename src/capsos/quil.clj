@@ -118,19 +118,23 @@
    searchmode: :closest, :farthest, :random, also with found as a prefix
                to designate only jump when found.
   "
-  [searchmode swarm points]
+  [swarm points]
   ;; For now, lets just implement random
-  (let [ctpx (:target swarm)
+  (let [searchmode (:searchmode swarm)
+        ctpx (:target swarm)
         ct {:x (find-cell-pos (:x ctpx))
             :y (find-cell-pos (:y ctpx))}
         xy (cond
+            (empty? points) (to-xy-tuple ct)
+            (= :stationary searchmode) (to-xy-tuple ct)
             (= :random searchmode) (rand-nth (seq points))
             (= :closest searchmode) (to-xy-tuple (tgt-min (to-xy-maps points) ct))
             (= :farthest searchmode) (to-xy-tuple (tgt-max (to-xy-maps points) ct))
-            )
+            :else (to-xy-tuple ct))
         x  (* @px-scaling (first xy))
         y  (* @px-scaling (second xy))]
     {:x x :y y}))
+
 
 (defn pso-find-hits
   "Find the cells of the CA that points in the PSO are touching."
@@ -139,8 +143,11 @@
        (map (fn [{x :x y :y}]
               [(int (find-cell-pos x))
                (int (find-cell-pos y))]))
-       (into #{})
-       (intersection points)))
+       ;;(into #{})
+       ;;(intersection points)
+       (filter (partial contains? points))
+       ))
+
 
 ;;
 ;; ## Events

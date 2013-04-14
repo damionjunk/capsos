@@ -12,7 +12,7 @@
    the keys defined in run-sketch if at all possible."
   [opts]
   (gfx/run-sketch opts)
-  (future (state/timed-pso-targeter    (partial gfx/pso-find-target :closest)))
+  (future (state/timed-pso-targeter    gfx/pso-find-target))
   (future (state/timed-pso-intersector gfx/pso-find-hits))
   (future (state/timed-pso-state-update))
   (future (state/timed-ca-state-update)))
@@ -20,12 +20,16 @@
 
 (comment
 
-  (go {:x 45 :y 30 :scalingpx 20 :cadelay 200 :psodelay 100 :particles 10 
+  (go {:x 45 :y 30 :scalingpx 20 :cadelay 200 :psodelay 100 :particles 5
        :retarget-delay 2000})
 
   (gfx/stop)
 
   (reset! state/world-state (ca/ca-glider-gun 0 10))
+  (reset! state/world-state #{})
+
+
+  (swap! state/pso-state assoc :searchmode :stationary)
 
   )
 
@@ -45,7 +49,6 @@
   (dotimes [x 50]
     (swap!  state/pso-state pso/step))
 
-  (reset! state/world-state #{})
 
   (swap! state/world-state union (ca/ca-blinker 4 4) (ca/ca-blinker 8 8))
 

@@ -15,18 +15,27 @@
 (defonce running? (atom true))
 (defonce toroidal? (atom false))
 
+;; Define some scale constraints for the PSOs
+(def tonalkeys (atom {1 {:scale (comp F sharp major low low)
+                         :range 15}
+                      2 {:scale (comp F sharp major high)
+                         :range 15}
+                      }))
+
 (def synthatom (atom nil))
 
 
-(def ^:dynamic tonalkey (comp C sharp major low low))
-
+;;
+;; Right now this is using just a sum of the x,y to determine
+;; pitch.
 (defn synth-event
   [state]
-  (let [xsum (reduce #(+ %1 (first %2)) 0 state)
-        ysum (reduce #(+ %1 (second %2)) 0 state)
-        tone (mod (+ xsum ysum) 15)
-        tone (tonalkey tone)
-        dur  (* (count state) 0.35)]
+  (let [xsum    (reduce #(+ %1 (first %2)) 0 state)
+        ysum    (reduce #(+ %1 (second %2)) 0 state)
+        tone    (mod (+ xsum ysum) 15)
+        scalefn (get-in @tonalkeys [1 :scale])
+        tone    (scalefn tone)
+        dur     (* (count state) 0.75)]
     (when (and (pos? xsum) (pos? ysum))
       (audio/tonal tone 0.5 dur))))
 
@@ -73,10 +82,9 @@
   (while @running?
     (if (not @paused?)
       (let [target (target-fn @pso-state @world-state)]
-        (println "Targeting:" target)
+        (println (format "Targeting (%s): %s" (:searchmode @pso-state) target))
         (swap! pso-state pso/re-target target)))
     (Thread/sleep @pso-target-speed)))
-
 
 (defn timed-pso-intersector
   ""
@@ -90,15 +98,3 @@
         (synth-event hits)
         ))
     (Thread/sleep 250)))
-
-
-(comment
-
-  (ot/stop)
-
-  (reset! pso-target-speed 200)
-
-  (def ^:dynamic tonalkey (comp F sharp mixolydian low low))
-
-
-  )
