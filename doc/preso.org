@@ -1,0 +1,233 @@
+#+TITLE: i709 Capsos Presentation
+#+AUTHOR: Damion Junk \newline /Indiana University/
+#+DATE: 04-25-2013
+#+setupfile: "org-latex-header.org"
+#+BEGIN_LaTeX
+\thispagestyle{dajgit}
+#+END_LaTeX
+
+
+#+begin_comment
+Presentation notes for final project presentation / live coding
+#+end_comment
+
+* Demo Part 1
+
+** Order
+
+- Start canvas
+- Blinker, Square, Glider
+- *Time for some Clojure!*
+- "How would we go about filling the CA grid with random data?"
+  - About 6 Steps .. Hopefully doesn't take too much time.
+- Pause Fill Screen
+- Unpause *AND* 
+- Listen to a 10 second excerpt of *Capsos generating* 4'33"
+- 4'33" by John Cage [fn:fourthirtythree]
+- "In 4'33", neither artist nor composer has any impact on the piece, so that Cage has no way of controlling what ambient sounds will be heard by the audience"
+
+[fn:fourthirtythree] http://en.wikipedia.org/wiki/4%E2%80%B233%E2%80%B3
+  
+** Code Filled In
+
+The random code examples.
+
+#+begin_example
+(comment
+
+  ;; Random
+
+  ;; rstep 1 - a random integer
+
+  (rand-int 30)
+
+  ;; rstep 2 - some random integers
+
+  (take 3 (repeatedly #(rand-int 30)))
+
+  ;; rstep 3 - we need X & Y!
+
+  (map vector
+       ;; need X & Y! 35, 25
+       (take 3 (repeatedly #(rand-int 35)))
+       (take 3 (repeatedly #(rand-int 25))))
+
+  ;; rstep 4 - Only the unique items (plus CA is hashset of coordinates)
+
+  (into #{} (map vector
+                 ;; need X & Y! 35, 25
+                 (take 3 (repeatedly #(rand-int 35)))
+                 (take 3 (repeatedly #(rand-int 25)))))
+
+  ;; rstep 5 - I want a random number of random coordinates
+
+  (let [n (rand-int 12)]
+    (into #{} (map vector
+                   ;; need X & Y! 35, 25
+                   (take n (repeatedly #(rand-int 35)))
+                   (take n (repeatedly #(rand-int 25))))))
+
+  ;; rstep 6 - pretty picture time!
+  (reset! state/world-state 
+          (let [n (rand-int 30)]
+            (into #{} (map vector
+                           (take n (repeatedly #(rand-int 35)))
+                           (take n (repeatedly #(rand-int 25)))))))
+
+  ;; Keep the Elements
+  (swap! state/world-state union
+          (let [n (rand-int 30)]
+            (into #{} (map vector
+                           (take n (repeatedly #(rand-int 35)))
+                           (take n (repeatedly #(rand-int 25))))))) 
+  
+  )
+#+end_example
+
+
+
+* Demo Part 2
+
+** A : One Swarm, One Glider.
+
+- Pause, and set Toroidal Grid for CA
+- Clear the World State
+- Add a Glider
+- Add a Swarm *yodawg*
+  - Note Target vs Particle Positions
+  - Show Code for Swarm Adding
+- Unpause
+- Not too terribly exciting, go over the params for add swarm.
+- Params for Tonality - Play around with tonality
+  
+
+** B : Two Swarms, Two Gliders!
+
+- Pause
+- Set toroidal
+- Add a Glider
+- Add another Glider
+- Add *yodawg* PSO
+- Add *lolcat* PSO
+- Unpause
+
+** Part 2 Wrapup
+
+- That's the basic functionality of PSO and Swarm
+- There's more to do!
+
+  
+* Demo Part 3
+
+- Glider Gun
+- Add Jake the Dog
+- Play around with Settings for a While
+- Eventually Add Finn the Human
+- *Let it Ride*
+  
+- Now we'll code some drums
+- Kick, Snare, Hi-Hat, Open-Hat
+- Kick Pattern
+- That's great, but lets make it go for more bars!
+- *(dotimes [x 4] ... )*
+  
+#+begin_example
+;; Four on the Floor -
+
+(let [slp 250
+       nmp {:k [1 0 0 0  1 0 0 0  1 0 0 0  1 0 0 0]}]
+   (doseq [ctr (range (count (:k nmp)))]
+     (let [k (nth (:k nmp) ctr)]
+       (if (pos? k) (kick :amp 0.7))
+       (Thread/sleep slp))))
+#+end_example
+
+A basic drum pattern
+
+#+begin_example
+{:k [1 0 0 0  1 0 0 0  1 0 0 0  1 0 0 0]
+ :s [0 0 0 0  0 0 0 0  0 0 0 0  0 0 0 0]
+ :h [1 0 1 0  1 0 0 0  1 0 1 0  1 0 0 0]
+ :o [0 0 0 0  0 0 1 0  0 0 0 0  0 0 1 0]}
+#+end_example
+
+A good more funky pattern
+
+#+begin_example
+{:k [1 1 0 0  1 0 0 0  1 0 0 1  1 0 0 0]
+ :s [0 0 0 0  0 0 0 0  0 0 0 0  0 0 0 0]
+ :h [1 0 1 1  1 0 1 1  1 0 1 0  1 0 0 0]
+ :o [0 0 0 0  0 0 1 0  0 0 0 0  0 0 1 0]}
+#+end_example
+
+Full Basic:
+
+#+begin_example
+(let [slp 250
+       nmp {:k [1 0 0 0  1 0 0 0  1 0 0 0  1 0 0 0]
+            :s [0 0 0 0  0 0 0 0  0 0 0 0  0 0 0 0]
+            :h [1 0 1 0  1 0 0 0  1 0 1 0  1 0 0 0]
+            :o [0 0 0 0  0 0 1 0  0 0 0 0  0 0 1 0]}]
+   (doseq [ctr (range (count (:k nmp)))]
+     (let [k (nth (:k nmp) ctr)
+           s (nth (:s nmp) ctr)
+           h (nth (:h nmp) ctr)
+           o (nth (:o nmp) ctr)]
+       (do
+         (if (pos? k) (kick       :amp 0.7))
+         (if (pos? s) (snare      :amp 0.5))
+         (if (pos? h) (closed-hat :amp 0.1))
+         (if (pos? o) (open-hat   :amp 0.1))
+         (Thread/sleep slp)))))
+#+end_example
+
+
+Full Funky:
+
+#+begin_example
+(dotimes [x 4]
+  (let [slp 250
+        nmp {:k [1 1 0 0  1 0 0 0  1 0 0 1  1 0 0 0]
+             :s [0 0 0 0  0 0 0 0  0 0 0 0  0 0 0 0]
+             :h [1 0 1 1  1 0 1 1  1 0 1 0  1 0 0 0]
+             :o [0 0 0 0  0 0 1 0  0 0 0 0  0 0 1 0]}]
+    (doseq [ctr (range (count (:k nmp)))]
+      (println (format "DrumSeq %d" (inc x)))
+      (let [k (nth (:k nmp) ctr)
+            s (nth (:s nmp) ctr)
+            h (nth (:h nmp) ctr)
+            o (nth (:o nmp) ctr)]
+        (do
+          (if (pos? k) (kick       :amp 0.7))
+          (if (pos? s) (snare      :amp 0.5))
+          (if (pos? h) (closed-hat :amp 0.1))
+          (if (pos? o) (open-hat   :amp 0.1))
+          (Thread/sleep slp))))))
+#+end_example
+ 
+
+* Some Spooky Sound Derived from GBEST
+
+If there is some extra time...
+
+#+begin_example
+ (audio/tdt-synth-env 200 0.3 0.8 60)
+
+ (let [pmst (:jakethedog @state/pso-state) 
+       gb   (:gbest pmst)]
+   (audio/tdt-synth-env (first gb) 0.3 0.8 60))
+
+ (let [pmst (:jakethedog @state/pso-state) 
+       gb   (:gbest pmst)]
+   (if (> (rand) 0.5)
+     (audio/tdt-synth-env (first  gb) 0.3 0.8 60)
+     (audio/tdt-synth-env (second gb) 0.3 0.8 60)))
+
+ (dotimes [x 10]
+    (let [pmst (:jakethedog @state/pso-state) 
+          gb   (:gbest pmst)]
+      (if (> (rand) 0.5)
+        (audio/tdt-synth-env (first gb)  0.3 0.8 60)
+        (audio/tdt-synth-env (second gb) 0.3 0.8 60)))
+    (Thread/sleep (+ 500 (* 1000 (rand))))) 
+#+end_example

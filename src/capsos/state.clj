@@ -2,9 +2,7 @@
   (:require [capsos.ca     :as ca]
             [capsos.pso    :as pso]
             [capsos.audio  :as audio]
-            [overtone.live :as ot])
-  (:use [leipzig.scale]
-        [leipzig.chord]))
+            [overtone.live :as ot]))
 
 (defonce world-state (atom #{}))
 (defonce paused?   (atom false))
@@ -19,46 +17,8 @@
 (defonce pso-state (atom {}))
 (def synthatom (atom nil))
 
-;;
-;; Needs refactored. ... This function doesn't belong here.
-(defn chord-arp
-  "Given a key, mode, and chord map from Leipzig,
-   N-octaves of the chord are returned as a MIDI note sequence.
-
-   Example:
-
-   (chord-arp (comp C major) seventh 2)
-
-   ;; => (60 64 67 71 72 76 79 83)
-   "
-  [key-fn chord-map octaves]
-  (let [s (map key-fn (range 12))
-        v (map #(nth s %) (map second chord-map))]
-    (sort (flatten (take octaves
-                         (iterate (fn [ms] (map (partial + 12) ms)) v))))))
-
-(defn mod-nth-chord
-  [carp v]
-  (nth carp (mod v (count carp))))
-
-
 ;; Define some scale constraints for the PSOs
-(def tonalkeys (atom {:bass {:scale (partial mod-nth-chord
-                                             (chord-arp (comp G sharp aeolian low low low) seventh 2)) 
-                             :range 8 
-                             :synth audio/tonal-square
-                             :durations [2 0 2 0 4 4]}
-                      :melody {:scale (comp G sharp mixolydian high)
-                               :range 15
-                               :synth audio/tonal-sine
-                               :durations [3 4 1 2 2 2 4 4 8]
-                               } 
-                      :high {:scale (comp G sharp mixolydian)
-                             :range 4 
-                             :synth audio/tonal-sine
-                             :durations [8 12 16]
-                             }
-                      }))
+(def tonalkeys (atom {}))
 
 (defn synth-event
   [ca-state pso-k pso-st]
@@ -70,7 +30,7 @@
           xbar    (/ (+ xmax xmin) 2) 
           ybar    (/ (+ ymax ymin) 2)
 
-          scalefn (get-in @tonalkeys [pso-k :scale])
+          scalefn (get-in @tonalkeys [pso-k :scalef])
           tonalr  (get-in @tonalkeys [pso-k :range])
           tonald  (get-in @tonalkeys [pso-k :durations])
           
@@ -92,7 +52,7 @@
         pfrq (* xsum ysum)
         pfrq (if (zero? pfrq) ofrq pfrq)
         pflt (* 10 (max 1 (count state)))]
-    (println "Freq:" xsum ysum pfrq)
+    ;;(println "Freq:" xsum ysum pfrq)
     (audio/synth-ctl @synthatom :amp 1.0 :freq pfrq :filter 30)
     ))
 
@@ -133,7 +93,7 @@
     (if (not @paused?)
       (doseq [[k pso-s] @pso-state]
         (let [target (target-fn pso-s @world-state)]
-          (println (format "PSO (%s) Targeting (%s): %s" k (:searchmode pso-s) target))
+          ;;(println (format "PSO (%s) Targeting (%s): %s" k (:searchmode pso-s) target))
           (swap! pso-state
                  (fn [pso-s]
                    (assoc pso-s k (pso/re-target (get pso-s k) target)))))))
@@ -148,7 +108,7 @@
     (if (not @paused?)
       (doseq [k (keys @pso-state)]
         (let [hits (quil-target-fn (get @pso-state k) @world-state)]
-          (println (format "PSO (%s) Hits: %s" k (count hits)))
+          ;;(println (format "PSO (%s) Hits: %s" k (count hits)))
           (try
             (synth-event hits k (get @pso-state k))
             (catch Exception e

@@ -4,6 +4,7 @@
 ;; ## CA Lifeforms
 ;;
 
+(def origin-square  #{[1 0] [0 1] [1 1] [0 0]})
 (def origin-glider  #{[1 0] [2 1] [0 2] [1 2] [2 2]})
 (def origin-blinker #{[1 0] [1 1] [1 2]})
 (def origin-glider-gun #{[35 2] [35 3] [34 2] [34 3] [1 4] [0 4] [1 5] [0 5]
@@ -33,6 +34,11 @@
   "Glider gun!"
   [x y]
   (ca-shape x y origin-glider-gun))
+
+(defn ca-square
+  "Square"
+  [x y]
+  (ca-shape x y origin-square))
 
 ;;
 ;; ## Cellular Automata Implementation

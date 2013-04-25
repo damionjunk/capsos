@@ -22,8 +22,8 @@
         signal (+ (* 0.8 (sin-osc (+ basef freq-a basef-mod)))
                   (* 0.5 (square  (+ mud basef freq-b basef-mod)))
                   (* 0.7 (saw     (+ mud basef freq-c basef-mod))))
-        ;env (env-gen (adsr 0.5 2 1 1) :gate (line:kr 1.0 0 1.0) :action FREE)
-        env (env-gen (adsr 0.5 2 1 1) :gate gate :action FREE)
+        env (env-gen (adsr 0.5 2 1 1) :gate (line:kr 1.0 0 1.0) :action FREE)
+        ;env (env-gen (adsr 0.5 2 1 1) :gate gate :action FREE)
         ]
     (out 0 :signals (* env (pan2
                             (* amp (lpf:ar signal filter-f))
@@ -34,17 +34,24 @@
   [note 60 amp 0.3 dur 0.6 filter 7]
   (let [filter-f (lin-lin:kr filter 0 127 100 5000)
         snd (sin-osc (midicps note))
-        env (env-gen (perc 0.01 dur) :action FREE)
-        ]
+        env (env-gen (perc 0.01 dur) :action FREE)]
     (* env (lpf:ar snd filter-f) amp)))
 
 (definst tonal-square
   [note 60 amp 0.3 dur 0.6 filter 80]
   (let [filter-f (lin-lin:kr filter 0 127 100 5000)
         snd (square (midicps note))
-        env (env-gen (perc 0.01 dur) :action FREE)
-        ]
+        env (env-gen (perc 0.01 dur) :action FREE)]
     (* env (lpf:ar snd filter-f) amp)))
+
+(definst tonal-square-autofiltered
+  [note 60 amp 0.3 dur 0.6 filter 80]
+  (let [;filter-f (lin-lin:kr (lf-saw:kr 100) 0 1.0 100 600)
+        filter-f (lin-lin:kr (sin-osc:kr 0.05) -1 1 20 600)
+        snd (square (midicps note))
+        env (env-gen (perc 0.71 dur 1 4) :action FREE)]
+    (* env (lpf:ar snd filter-f) amp)))
+
 
 (defn all-stop
   []
@@ -55,62 +62,26 @@
   [s & args]
   (apply (partial ctl s) args))
 
+
 (comment
 
-  (tonal-square 30 0.8 1.0 50)
+  (tonal-square-autofiltered 57 0.8 9.0)
+  (tonal-square 57 0.8 3.0 60)
   (tonal-sine 60 0.8 1.0 50)
   (tonal-sine 72 0.8 1.0 10)
-
   (stop)
 
-  ;;
-  ;; Play some drums on the given interval:
-
-  (dotimes [x 1]
-    (let [slp 250
-          nmp {:k [1 0 0 0  1 0 0 0  1 0 0 0  1 0 0 0]
-               :s [0 0 0 0  0 0 0 0  0 0 0 0  0 0 0 0]
-               :h [1 0 1 0  1 0 0 0  1 0 1 0  1 0 0 0]
-               :o [0 0 0 0  0 0 1 0  0 0 0 0  0 0 1 0]}]
-      (doseq [ctr (range (count (:k nmp)))]
-        (let [k (nth (:k nmp) ctr)
-              s (nth (:s nmp) ctr)
-              h (nth (:h nmp) ctr)
-              o (nth (:o nmp) ctr)]
-          (do
-            (if (pos? k) (kick       :amp 0.7))
-            (if (pos? s) (snare      :amp 0.5))
-            (if (pos? h) (closed-hat :amp 0.1))
-            (if (pos? o) (open-hat   :amp 0.1))
-            (Thread/sleep slp))))))
-
-
-    (dotimes [x 4]
-    (let [slp 250
-          nmp {:k [1 1 0 0  1 0 0 0  1 0 0 1  1 0 0 0]
-               :s [0 0 0 0  0 0 0 0  0 0 0 0  0 0 0 0]
-               :h [1 0 1 1  1 0 1 1  1 0 1 0  1 0 0 0]
-               :o [0 0 0 0  0 0 1 0  0 0 0 0  0 0 1 0]}]
-      (doseq [ctr (range (count (:k nmp)))]
-        (println (format "DrumSeq %d" (inc x)))
-        (let [k (nth (:k nmp) ctr)
-              s (nth (:s nmp) ctr)
-              h (nth (:h nmp) ctr)
-              o (nth (:o nmp) ctr)]
-          (do
-            (if (pos? k) (kick       :amp 0.7))
-            (if (pos? s) (snare      :amp 0.5))
-            (if (pos? h) (closed-hat :amp 0.1))
-            (if (pos? o) (open-hat   :amp 0.1))
-            (Thread/sleep slp))))))
-
-
-  (stop)
+  ;; Add Snare
+  ;; Add Hi-Hat
+  ;; Add Open Hi-Hat
 
   (closed-hat :amp 0.1)
+  (open-hat :amp 0.1)
+  (snare :amp 0.5)
+  (kick :amp 7.0)
 
-  (snare :amp 1.0)
-  (kick2 :amp 1.0)
 
+  
 
+  (stop)
   )

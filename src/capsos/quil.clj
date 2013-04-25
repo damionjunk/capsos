@@ -1,6 +1,7 @@
 (ns capsos.quil
-  (:require [capsos.state :as state]
-            [capsos.pso   :as pso])
+  (:require [capsos.state  :as state]
+            [capsos.pso    :as pso]
+            [leipzig.scale :as lz])
   (:use [quil.core]
         [clojure.set]))
 
@@ -8,36 +9,6 @@
 (defonce ^:dynamic pause-position [650 10 25])
 (defonce ^:dynamic toroid-position [650 10 25])
 (defonce ^:dynamic text-start-position [650 100])
-
-
-;;
-;; ## Some controls for swarm creation
-;;    probably doesn't belong in this namespace
-
-(defn add-swarm!
-  ""
-  [sid particles searchmode target weights]
-  (let [wx (first @state/world-size)
-        wy (second @state/world-size)]
-    (swap! state/pso-state assoc sid 
-           (pso/make-swarm :particles particles
-                           :searchmode searchmode
-                           :max-x (* wx @px-scaling)
-                           :max-y (* wy @px-scaling)
-                           :weights weights 
-                           :target target))))
-
-(defn remove-swarm!
-  ""
-  [k]
-  (swap! state/pso-state dissoc k))
-
-(defn update-swarm!
-  ""
-  [swarmid k uval]
-  (let [sw (get @state/pso-state swarmid)]
-    (swap! state/pso-state assoc swarmid (assoc sw k uval))))
-
 
 ;;
 ;; ## Some GUI Controls
@@ -92,6 +63,7 @@
       (fill 100 255 255)
       (doseq [{x :x y :y} particles]
         (ellipse x y 8 8))
+      (fill 175 75 75)
       (ellipse (:x target) (:y target) 10 10))))
 
 (defn draw

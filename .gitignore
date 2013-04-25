@@ -9,3 +9,11 @@ pom.xml
 .lein-failures
 .lein-plugins
 .DS_Store
+*.log
+*.pyg
+*.pdf
+*.tex
+*.out
+*.fdb_latexmk
+*.aux
+*.fls

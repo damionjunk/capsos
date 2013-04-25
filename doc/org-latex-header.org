@@ -1,0 +1,22 @@
+#+LaTeX_CLASS: memoir
+#+LaTeX_CLASS_OPTIONS:[9pt,article,oneside]
+#+OPTIONS: toc:nil num:nil
+#+STARTUP: entitiespretty
+#+LATEX_CMD: xelatex
+#+LATEX_HEADER:
+#+LATEX_HEADER: \usepackage{fullpage}
+#+LATEX_HEADER: \usepackage{amsmath}
+#+LATEX_HEADER: \input{vc}
+#+LATEX_HEADER: \usepackage{daj-latex-common/daj-styles}
+#+LATEX_HEADER: \usepackage{daj-latex-common/memoir-article-styles}
+#+LATEX_HEADER: \usepackage[minted]{daj-preamble}
+#+LATEX_HEADER: \defaultfontfeatures{Scale=MatchLowercase,Mapping=tex-text}
+#+LATEX_HEADER: \setmainfont{Minion Pro}
+#+LATEX_HEADER: \setromanfont{Minion Pro}
+#+LATEX_HEADER: \setsansfont{Optima}
+#+LATEX_HEADER: \setmonofont{Inconsolata}
+#+LATEX_HEADER: \chapterstyle{article-4-sans}
+#+LATEX_HEADER: \published{contact junkda@gmail.com with any questions or concerns}
+#+LATEX_HEADER: \setlength{\parindent}{0pt}
+#+LATEX_HEADER: \setlength{\parskip}{\baselineskip}
+
